@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Інтерактивна програма на 10 чисел</title>
+  <style>
+    :root{
+      --pink:#d63384;
+      --bg:#f9f9fb;
+      --card:#ffffff;
+      --text:#333;
+      --muted:#666;
+      --error:#d90429;
+      --ok:#2b9348;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      margin:0;
+      background: var(--bg);
+      color: var(--text);
+      line-height:1.5;
+    }
+    .container{
+      max-width: 760px;
+      margin: 40px auto;
+      background: var(--card);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.06);
+    }
+    h1{
+      margin-top:0;
+      font-size: 28px;
+      letter-spacing: .2px;
+      color:#444;
+    }
+    .hint{
+      color: var(--muted);
+      margin-bottom:12px;
+    }
+    input[type="text"]{
+      width:100%;
+      padding:14px 16px;
+      border:1px solid #ddd;
+      border-radius: 12px;
+      font-size:16px;
+      outline:none;
+      transition: box-shadow .2s, border-color .2s;
+    }
+    input[type="text"]:focus{
+      border-color: var(--pink);
+      box-shadow: 0 0 0 3px rgba(214,51,132,.12);
+    }
+    .actions{
+      margin-top:10px;
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+    }
+    button{
+      padding:12px 18px;
+      border:none;
+      border-radius: 12px;
+      font-size:16px;
+      cursor:pointer;
+    }
+    .primary{ background: var(--pink); color:white; }
+    .ghost{ background: transparent; border:1px solid #ddd;}
+    .msg{ margin-top:16px; }
+    .error{
+      color:var(--error);
+      font-weight:600;
+    }
+    .result{
+      margin-top:18px;
+      padding:16px;
+      background:#faf6f8;
+      border:1px solid #f3d7e5;
+      border-radius:12px;
+    }
+    .row{ margin:6px 0; }
+    .pill{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      font-weight:700;
+      background:white;
+      border:1px solid #f0c6dc;
+      color: var(--pink);
+    }
+    .numbers-list{
+      margin-top:10px;
+      color:#555;
+      font-size:14px;
+    }
+    .badge{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      margin-left:8px;
+      font-size:12px;
+      border:1px solid #eee;
+      color:#555;
+      background:#fff;
+    }
+    footer{
+      margin-top:24px;
+      font-style:italic;
+      color:#444;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>Інтерактивна програма</h1>
+    <p class="hint">Введіть <b>рівно 10</b> дійсних чисел <i>(роздільник — крапка)</i> через кому. Допустимі значення: <b>від 10 до 1000</b>.</p>
+    <input id="numbersInput" type="text" placeholder="Наприклад: 12.5, 200, 999.9, 15, 20, 30, 40, 50, 60, 70" />
+    <div class="actions">
+      <button class="primary" id="calcBtn">Обчислити</button>
+      <button class="ghost" id="clearBtn">Очистити</button>
+    </div>
+    <div id="output" class="msg"></div>
+
+    <footer>Розробник: Шостак Лев Владиславович</footer>
+  </main>
+
+  <script>
+    const input = document.getElementById('numbersInput');
+    const output = document.getElementById('output');
+    const calcBtn = document.getElementById('calcBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    function showError(msg){
+      output.innerHTML = '<p class="error">❌ ' + msg + '</p>';
+    }
+
+    function processNumbers(){
+      const raw = input.value.trim();
+      output.innerHTML = '';
+
+      if(!raw){
+        showError('Будь ласка, введіть дані у поле.');
+        return;
+      }
+
+      let tokens = raw.split(',').map(s => s.trim());
+
+      if(tokens.length !== 10){
+        showError('Має бути рівно 10 чисел (зараз: ' + tokens.length + ').');
+        return;
+      }
+
+      // Перевірка формату: лише цифри та крапка як десятковий роздільник
+      const validFormat = tokens.every(t => /^\d+(\.\d+)?$/.test(t));
+      if(!validFormat){
+        showError('Неправильний формат. Використовуйте цифри та крапку як роздільник (наприклад, 12.5).');
+        return;
+      }
+
+      const numbers = tokens.map(Number);
+
+      // Діапазон
+      const outOfRange = numbers.filter(n => n < 10 || n > 1000);
+      if(outOfRange.length){
+        showError('Числа мають бути у діапазоні від 10 до 1000. Позадіапазонні: ' + outOfRange.join(', ') + '.');
+        return;
+      }
+
+      const min = Math.min(...numbers);
+      const max = Math.max(...numbers);
+      const avg = (numbers.reduce((a,b)=>a+b,0)/numbers.length).toFixed(2);
+
+      const list = numbers.map(n => {
+        if(n === min) return n + ' <span class="badge">min</span>';
+        if(n === max) return n + ' <span class="badge">max</span>';
+        return String(n);
+      }).join(', ');
+
+      output.innerHTML = `
+        <div class="result">
+          <div class="row">Min: <span class="pill">${min}</span></div>
+          <div class="row">Max: <span class="pill">${max}</span></div>
+          <div class="row">Average: <b>${avg}</b></div>
+          <div class="numbers-list">Введені числа: ${list}</div>
+        </div>
+      `;
+    }
+
+    calcBtn.addEventListener('click', processNumbers);
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      output.innerHTML = '';
+      input.focus();
+    });
+
+    // Enter для швидкого запуску
+    input.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter') processNumbers();
+    });
+  </script>
+</body>
+</html>
